@@ -29,7 +29,7 @@ final class Day<A extends Part, B extends Part> {
 
 Day<Part, Part> getDay(int day) => _days[day - 1];
 
-extension StringResult on Part<Object> {
+extension StringResult on Part {
   Future<String> calculateString(Stream<String> input) async {
     final String result;
     switch (this) {
