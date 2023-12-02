@@ -44,7 +44,7 @@ Future<void> main(List<String> args) async {
     inputReader = InputReader(file);
   } on ArgumentError catch (e) {
     print(e.message);
-    print('\n\Usage:\n${parser.usage}');
+    print('\nUsage:\n${parser.usage}');
     exit(1);
   }
 
