@@ -66,6 +66,6 @@ jobs:
       - uses: dart-lang/setup-dart@v1
         with:
           # renovate: datasource=docker depName=dart
-          sdk: 3.2.1
+          sdk: 3.2.2
       - run: dart pub get
       - run: dart compile exe bin/main.dart
