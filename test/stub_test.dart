@@ -1,8 +1,7 @@
 import 'package:test/test.dart';
 
-
 void main() {
-    test('stub', () {
-      expect(true, isTrue);
-    });
+  test('stub', () {
+    expect(true, isTrue);
+  });
 }
