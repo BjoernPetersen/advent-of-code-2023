@@ -59,8 +59,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows, macos]
-    runs-on: ${{ matrix.os }}-latest
+        runner: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
@@ -70,10 +70,19 @@ jobs:
       - run: |
           dart pub get
           mkdir output
-      - run: dart compile exe bin/main.dart -o "output/advent-${{ matrix.os }}"
-        if: matrix.os != 'windows'
-      - run: dart compile exe bin/main.dart -o "output/advent-${{ matrix.os }}.exe"
-        if: matrix.os == 'windows'
+      - run: |
+          if [ "${{ matrix.runner }}" == "ubuntu-latest ]
+          then
+            os="linux"
+          else
+            os="macos"
+          fi
+          filename="output/advent-${os}"
+          dart compile exe bin/main.dart -o "$filename"
+          chmod +x "$filename"
+        if: matrix.runner != 'windows-latest'
+      - run: dart compile exe bin/main.dart -o "output/advent-win.exe"
+        if: matrix.runner == 'windows-latest'
       - uses: actions/upload-artifact@v3
         with:
           name: binaries
