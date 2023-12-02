@@ -62,5 +62,5 @@ jobs:
         with:
           # renovate: datasource=docker depName=dart
           sdk: 3.2.1
-      - run: |
-          dart compile exe bin/main.dart
+      - run: dart pub get
+      - run: dart compile exe bin/main.dart
