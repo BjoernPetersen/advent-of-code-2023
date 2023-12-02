@@ -7,9 +7,11 @@ on:
 
 jobs:
   validate-renovate-config:
+    name: Validate Renovate configuration
     uses: BlindfoldedSurgery/renovate-config/.github/workflows/validate.yml@main
 
   test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -21,6 +23,7 @@ jobs:
         run: dart test
 
   check-format:
+    name: Check Format
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -34,6 +37,7 @@ jobs:
         run: dart format test --set-exit-if-changed
 
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
@@ -45,6 +49,7 @@ jobs:
         run: dart analyze --fatal-infos
 
   build:
+    name: Build binary
     if: github.ref_name == github.event.repository.default_branch
     needs:
       - validate-renovate-config
