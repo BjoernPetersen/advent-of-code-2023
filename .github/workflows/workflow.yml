@@ -48,6 +48,4 @@ jobs:
       - name: Run Analysis
         run: dart analyze --fatal-infos
 
-  build:
-    name
 # TODO: build binaries
