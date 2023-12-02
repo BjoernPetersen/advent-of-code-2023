@@ -71,7 +71,7 @@ jobs:
           dart pub get
           mkdir output
       - run: |
-          if [ "${{ matrix.runner }}" == "ubuntu-latest ]
+          if [ "${{ matrix.runner }}" == "ubuntu-latest" ]
           then
             os="linux"
           else
