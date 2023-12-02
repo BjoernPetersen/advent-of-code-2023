@@ -48,4 +48,23 @@ jobs:
       - name: Run Analysis
         run: dart analyze --fatal-infos
 
-# TODO: build binaries
+  build:
+    name: Build binary
+    if: github.ref_name == github.event.repository.default_branch
+    needs:
+      - validate-renovate-config
+      - test
+      - check-format
+      - lint
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          # renovate: datasource=docker depName=dart
+          sdk: 3.2.1
+      - run: |
+          dart compile exe bin/main.dart
