@@ -15,3 +15,8 @@ final class InputReader {
     }
   }
 }
+
+File getDefaultPathForDay(int day) {
+  final filename = '${day.toString().padLeft(2, '0')}.txt';
+  return File('inputs/$filename');
+}

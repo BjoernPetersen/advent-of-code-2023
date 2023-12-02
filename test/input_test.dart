@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:aoc/input.dart';
 import 'package:test/test.dart';
 
 void main() {
-  final path = File('inputs/01.txt');
+  final path = getDefaultPathForDay(1);
   final inputReader = InputReader(path);
   test('Reads all lines', () async {
     final allLines = inputReader.readLines().toList();
