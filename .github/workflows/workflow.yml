@@ -68,4 +68,14 @@ jobs:
           # renovate: datasource=docker depName=dart
           sdk: 3.2.2
       - run: dart pub get
-      - run: dart compile exe bin/main.dart
+      - run: |
+          mkdir output
+          if [ "${{ matrix.runner }}" == "windows-latest" ]
+          then
+            EXTENSION=".exe"
+          fi
+          dart compile exe bin/main.dart -o "output/advent$EXTENSION"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: output/*
