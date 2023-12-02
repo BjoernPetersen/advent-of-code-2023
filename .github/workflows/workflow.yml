@@ -59,22 +59,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.runner }}
+        os: [ubuntu, windows, macos]
+    runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
         with:
           # renovate: datasource=docker depName=dart
           sdk: 3.2.2
-      - run: dart pub get
       - run: |
+          dart pub get
           mkdir output
-          if [ "${{ matrix.runner }}" == "windows-latest" ]
-          then
-            EXTENSION=".exe"
-          fi
-          dart compile exe bin/main.dart -o "output/advent$EXTENSION"
+      - run: dart compile exe bin/main.dart -o "output/advent-${{ matrix.os }}"
+        if: matrix.os != 'windows'
+      - run: dart compile exe bin/main.dart -o "output/advent-${{ matrix.os }}.exe"
+        if: matrix.os == 'windows'
       - uses: actions/upload-artifact@v3
         with:
           name: binaries
