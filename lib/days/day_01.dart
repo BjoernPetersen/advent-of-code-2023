@@ -56,8 +56,8 @@ class PartTwo implements IntPart {
   const PartTwo();
 
   int calculateLine(RegExp forwardRegex, RegExp backwardRegex, String line) {
-    final firstMatch = forwardRegex.firstMatch(line)!.group(0)!;
-    final lastMatch = backwardRegex.firstMatch(reverse(line))!.group(0)!;
+    final firstMatch = forwardRegex.firstMatch(line)!.group(1)!;
+    final lastMatch = backwardRegex.firstMatch(reverse(line))!.group(1)!;
     final result = values[firstMatch]! * 10 + values[reverse(lastMatch)]!;
     return result;
   }
