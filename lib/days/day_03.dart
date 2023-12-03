@@ -76,6 +76,14 @@ class Line {
 }
 
 @immutable
+class Part {
+  final Line location;
+  final int number;
+
+  const Part(this.location, this.number);
+}
+
+@immutable
 class Schematic {
   static final _dotCodeUnit = '.'.codeUnitAt(0);
   static final _digitMin = '0'.codeUnitAt(0);
@@ -119,14 +127,12 @@ class Schematic {
     return char != _dotCodeUnit && (char < _digitMin || char > _digitMax);
   }
 
-  Iterable<(Line, int)> getPartNumbers() sync* {
-    final regex = RegExp(r'(\d+)([^\d]|$)');
+  Iterable<Part> getParts() sync* {
+    final regex = RegExp(r'(\d+)');
     for (final (y, line) in _schematic.indexed) {
       for (final match in regex.allMatches(line)) {
-        final group = match.group(1)!;
         final points = [
-          for (var x = match.start; x < match.start + group.length; x += 1)
-            Vector(x: x, y: y)
+          for (var x = match.start; x < match.end; x += 1) Vector(x: x, y: y)
         ];
         final checkPoints = <Vector>{};
         for (final point in points) {
@@ -139,7 +145,10 @@ class Schematic {
         checkPoints.removeAll(points);
 
         if (checkPoints.any(isSymbol)) {
-          yield (Line(start: points.first, end: points.last), int.parse(group));
+          yield Part(
+            Line(start: points.first, end: points.last),
+            int.parse(match.group(1)!),
+          );
         }
       }
     }
@@ -153,9 +162,7 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final schematic = await Schematic.fromLines(input);
-    return schematic
-        .getPartNumbers()
-        .fold<int>(0, (sum, element) => sum + element.$2);
+    return schematic.getParts().fold<int>(0, (sum, part) => sum + part.number);
   }
 }
 
@@ -166,16 +173,16 @@ final class PartTwo implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final schematic = await Schematic.fromLines(input);
-    final partNumbers = schematic.getPartNumbers().toList(growable: false);
+    final parts = schematic.getParts().toList(growable: false);
 
     // Loops go brrrrrrrrrrr
     var sum = 0;
     for (final gear in schematic.points.where((v) => schematic[v] == '*')) {
       final adjacentNumbers = <int>[];
-      for (final (line, partNumber) in partNumbers) {
+      for (final part in parts) {
         for (final neighbor in gear.neighbors) {
-          if (line.contains(neighbor)) {
-            adjacentNumbers.add(partNumber);
+          if (part.location.contains(neighbor)) {
+            adjacentNumbers.add(part.number);
             break;
           }
         }
