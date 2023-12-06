@@ -28,7 +28,7 @@ class Card {
   factory Card.fromString(String card) {
     final [name, numbers] = card.split(': ');
     final id = name.split(' ').last;
-    final [guesses, winningNumbers] = numbers.split(' | ');
+    final [winningNumbers, guesses] = numbers.split(' | ');
     return Card(
       id: int.parse(id),
       guesses: _parseNumbers(guesses),
