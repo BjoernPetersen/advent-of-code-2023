@@ -28,7 +28,7 @@ void main() {
           part = day.partTwo as IntPart;
         });
 
-        test('example 2 passes', () {
+        test('example 1 passes', () {
           final reader = getExampleReader(dayNum, '1');
           expect(part.calculate(reader.readLines()), completion(467835));
         });

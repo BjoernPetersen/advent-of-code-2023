@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 import '../input_helper.dart';
 
 void main() {
-  final dayNum = 2;
+  final dayNum = 7;
   final day = getDay(dayNum);
 
   group('day $dayNum', () {
@@ -12,11 +12,15 @@ void main() {
       final part = day.partOne as IntPart;
       test('example 1 passes', () {
         final reader = getExampleReader(dayNum, '1');
-        expect(part.calculate(reader.readLines()), completion(8));
+        expect(part.calculate(reader.readLines()), completion(6440));
+      });
+      test('example 2 passes', () {
+        final reader = getExampleReader(dayNum, '2');
+        expect(part.calculate(reader.readLines()), completion(6592));
       });
       test('input passes', () {
         final reader = getInputReader(dayNum);
-        expect(part.calculate(reader.readLines()), completion(2683));
+        expect(part.calculate(reader.readLines()), completion(246424613));
       });
     });
     group(
@@ -30,11 +34,15 @@ void main() {
 
         test('example 1 passes', () {
           final reader = getExampleReader(dayNum, '1');
-          expect(part.calculate(reader.readLines()), completion(2286));
+          expect(part.calculate(reader.readLines()), completion(5905));
+        });
+        test('example 2 passes', () {
+          final reader = getExampleReader(dayNum, '2');
+          expect(part.calculate(reader.readLines()), completion(6839));
         });
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(49710));
+          expect(part.calculate(reader.readLines()), completion(248256639));
         });
       },
       skip: false,
