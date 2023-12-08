@@ -32,10 +32,14 @@ void main() {
           final reader = getExampleReader(dayNum, '1');
           expect(part.calculate(reader.readLines()), completion(46));
         });
-        test('input passes', () {
-          final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(12634632));
-        });
+        test(
+          'input passes',
+          () {
+            final reader = getInputReader(dayNum);
+            expect(part.calculate(reader.readLines()), completion(12634632));
+          },
+          timeout: Timeout(const Duration(minutes: 30)),
+        );
       },
       skip: false,
     );

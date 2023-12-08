@@ -170,6 +170,7 @@ final class PartTwo implements IntPart {
 
     final slices = ranges.expand((range) => range.slices).iterator;
 
+    print('Using ${Platform.numberOfProcessors} threads for day 5 part 2.');
     final calculators = List.generate(
       Platform.numberOfProcessors,
       (index) => Calculator(id: index, almanac: almanac),
