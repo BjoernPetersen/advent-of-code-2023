@@ -19,7 +19,11 @@ Future<void> main(List<String> args) async {
     allowed: ['1', '2'],
     help: 'Which part of the day to compute (default: both)',
   );
-  parser.addOption('input', abbr: 'i', help: 'The path to a custom input txt');
+  parser.addOption(
+    'input',
+    abbr: 'i',
+    help: 'The path to a custom input txt',
+  );
 
   final argResult = parser.parse(args);
   final InputReader inputReader;
@@ -63,7 +67,7 @@ Future<void> main(List<String> args) async {
   }
 
   final startTime = DateTime.now();
-  final values = await Future.wait(results);
+  final List<String> values = await Future.wait(results);
   final stopTime = DateTime.now();
   print(
     'Executed ${results.length} part(s) in ${stopTime.difference(startTime)}',

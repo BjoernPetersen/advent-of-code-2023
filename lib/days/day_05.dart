@@ -1,7 +1,10 @@
+import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
 
 import 'package:aoc/day.dart';
+import 'package:async/async.dart';
 import 'package:meta/meta.dart';
 
 @immutable
@@ -144,8 +147,6 @@ final class PartOne implements IntPart {
   }
 }
 
-const enableMultithreading = true;
-
 @immutable
 final class PartTwo implements IntPart {
   const PartTwo();
@@ -154,23 +155,67 @@ final class PartTwo implements IntPart {
   Future<int> calculate(Stream<String> input) async {
     final almanac = await Almanac.fromInput(input);
 
-    if (enableMultithreading) {
-      final seeds = almanac.seeds;
-      final calculators = List.generate(
-        seeds.length ~/ 2,
-        (index) => Calculator(
-          almanac: almanac,
-          from: seeds[index * 2],
-          length: seeds[index * 2 + 1],
-        ),
-        growable: false,
-      );
+    // The following is a hellish version of:
+    // return almanac.seedsPartTwo.map(almanac.findLocationNumber).reduce(min);
 
-      return Stream.fromFutures(calculators.map((c) => c.calculate()))
-          .reduce(min);
-    } else {
-      return almanac.seedsPartTwo.map(almanac.findLocationNumber).reduce(min);
+    final seeds = almanac.seeds;
+    final ranges = List.generate(
+      seeds.length ~/ 2,
+      (index) => SeedRange(
+        from: seeds[index * 2],
+        length: seeds[index * 2 + 1],
+      ),
+      growable: false,
+    );
+
+    final slices = ranges.expand((range) => range.slices).iterator;
+
+    final calculators = List.generate(
+      Platform.numberOfProcessors,
+      (index) => Calculator(id: index, almanac: almanac),
+    );
+
+    // Await spawning and setup
+    await Future.wait(
+      [for (final calculator in calculators) calculator.start()],
+    );
+
+    // A group with the outputs of all calculators
+    final outputGroup = StreamGroup.merge(calculators.map((c) => c.output));
+
+    var doneCalculatorCount = 0;
+    for (final calculator in calculators) {
+      // initial numbers
+      if (!slices.moveNext()) {
+        calculator.close();
+        doneCalculatorCount += 1;
+        continue;
+      }
+      calculator.input.send(slices.current.asTuple());
     }
+
+    final results = <int>[];
+    final completer = Completer();
+    unawaited(outputGroup.forEach((output) {
+      final (id, location) = output;
+      results.add(location);
+      if (slices.moveNext()) {
+        calculators[id].input.send(slices.current.asTuple());
+        return;
+      }
+
+      doneCalculatorCount += 1;
+      if (doneCalculatorCount == calculators.length) {
+        completer.complete();
+      }
+    }));
+
+    await completer.future;
+    for (var c in calculators) {
+      c.close();
+    }
+
+    return results.reduce(min);
   }
 }
 
@@ -180,21 +225,109 @@ const day = Day(
 );
 
 @immutable
-class Calculator {
-  final Almanac almanac;
+class SeedRange {
   final int from;
   final int length;
 
-  const Calculator(
-      {required this.almanac, required this.from, required this.length});
+  const SeedRange({required this.from, required this.length});
 
-  Future<int> calculate() {
-    return Isolate.run(() {
-      var minLocation = almanac.findLocationNumber(from);
-      for (var seed = from; seed < from + length; seed += 1) {
-        minLocation = min(minLocation, almanac.findLocationNumber(seed));
+  factory SeedRange.fromTuple((int, int) tuple) =>
+      SeedRange(from: tuple.$1, length: tuple.$2);
+
+  (int, int) asTuple() => (from, length);
+
+  Iterable<SeedRange> get slices sync* {
+    var from = this.from;
+    var length = this.length;
+    final batch = 10000;
+    while (length > batch) {
+      yield SeedRange(from: from, length: batch);
+      from += batch;
+      length -= batch;
+    }
+
+    yield SeedRange(from: from, length: length);
+  }
+
+  Iterable<int> get seeds sync* {
+    for (var seed = from; seed < from + length; seed += 1) {
+      yield seed;
+    }
+  }
+
+  @override
+  String toString() {
+    return '$from -> ${from + length - 1}';
+  }
+}
+
+@immutable
+class IsolateEnv {
+  final Almanac almanac;
+  final int id;
+
+  IsolateEnv({required this.almanac, required this.id});
+
+  Future<void> _calculate(SendPort send) async {
+    final ReceivePort incoming = ReceivePort('$id: Calculator in');
+    send.send(incoming.sendPort);
+
+    try {
+      await incoming.forEach((element) {
+        final range = SeedRange.fromTuple(element);
+        final minimumLocation =
+            range.seeds.map(almanac.findLocationNumber).reduce(min);
+        send.send((id, minimumLocation));
+      });
+    } finally {
+      incoming.close();
+    }
+  }
+
+  Future<Isolate> spawn(SendPort sendPort) {
+    return Isolate.spawn<SendPort>(_calculate, sendPort);
+  }
+}
+
+@immutable
+class Calculator {
+  final Almanac almanac;
+  final int id;
+  late final SendPort input;
+  final ReceivePort _output;
+  late final Stream<(int, int)> output;
+
+  Calculator({required this.id, required this.almanac})
+      : _output = ReceivePort('$id: Calculator out');
+
+  Future<void> start() async {
+    final isolateEnv = IsolateEnv(almanac: almanac, id: id);
+    await isolateEnv.spawn(_output.sendPort);
+    final controller = StreamController<(int, int)>();
+    output = controller.stream;
+
+    final completer = Completer<void>();
+    unawaited(_pumpToController(controller, completer));
+
+    await completer.future;
+  }
+
+  Future<void> _pumpToController(
+    StreamController<(int, int)> controller,
+    Completer notifyInputPortReceived,
+  ) async {
+    await _output.forEach((element) {
+      if (!notifyInputPortReceived.isCompleted) {
+        input = element;
+        notifyInputPortReceived.complete();
+      } else {
+        controller.add(element);
       }
-      return minLocation;
     });
+    await controller.close();
+  }
+
+  void close() {
+    _output.close();
   }
 }
