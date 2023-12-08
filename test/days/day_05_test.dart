@@ -30,7 +30,7 @@ void main() {
 
         test('example 1 passes', () {
           final reader = getExampleReader(dayNum, '1');
-          expect(part.calculate(reader.readLines()), completion(30));
+          expect(part.calculate(reader.readLines()), completion(46));
         });
         test('input passes', () {
           final reader = getInputReader(dayNum);
