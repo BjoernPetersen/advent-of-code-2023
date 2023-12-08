@@ -218,7 +218,7 @@ final class PartTwo implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final originalAlmanac = await Almanac.fromInput(input);
-    final almanac = originalAlmanac.flatten();
+    final almanac = originalAlmanac;
     return almanac.seedsPartTwo
         .map(almanac.findLocationNumber)
         .reduce((value, element) => value > element ? element : value);
