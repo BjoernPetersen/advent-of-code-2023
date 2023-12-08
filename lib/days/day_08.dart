@@ -6,22 +6,18 @@ typedef NodeMap = Map<String, (String, String)>;
 @immutable
 class State {
   final int programCounter;
-  final List<String> currentNodes;
+  final String currentNode;
   final NodeMap nodes;
 
-  State._(this.programCounter, this.currentNodes, this.nodes);
+  State._(this.programCounter, this.currentNode, this.nodes);
 
-  State.initialPartOne(this.nodes)
-      : programCounter = 0,
-        currentNodes = const ['AAA'];
+  State.initial(
+    this.nodes, {
+    this.currentNode = 'AAA',
+  }) : programCounter = 0;
 
-  State.initialPartTwo(this.nodes)
-      : programCounter = 0,
-        currentNodes =
-            nodes.keys.where((n) => n.endsWith('A')).toList(growable: false);
-
-  State nextNodes(List<String> nextNodes) {
-    return State._(programCounter + 1, nextNodes, nodes);
+  State nextNode(String node) {
+    return State._(programCounter + 1, node, nodes);
   }
 }
 
@@ -33,15 +29,12 @@ final class Program {
 
   State step(State state) {
     final instruction = raw[state.programCounter % raw.length];
-    final nextNodes = state.currentNodes.map((currentNode) {
-      final (left, right) = state.nodes[currentNode]!;
-      if (instruction == 'R') {
-        return right;
-      } else {
-        return left;
-      }
-    });
-    return state.nextNodes(nextNodes.toList(growable: false));
+    final (left, right) = state.nodes[state.currentNode]!;
+    if (instruction == 'R') {
+      return state.nextNode(right);
+    } else {
+      return state.nextNode(left);
+    }
   }
 }
 
@@ -73,8 +66,8 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final (program, nodes) = await parseInput(input);
-    var state = State.initialPartOne(nodes);
-    while (state.currentNodes[0] != 'ZZZ') {
+    var state = State.initial(nodes);
+    while (state.currentNode != 'ZZZ') {
       state = program.step(state);
     }
     return state.programCounter;
@@ -82,21 +75,62 @@ final class PartOne implements IntPart {
 }
 
 @immutable
+class Cycle {
+  final int start;
+  final int length;
+
+  Cycle({required this.start, required this.length});
+
+  @override
+  String toString() {
+    return 'Start: $start, length: $length';
+  }
+}
+
+@immutable
 final class PartTwo implements IntPart {
   const PartTwo();
+
+  int findGcd(int a, int b) {
+    if (b == 0) {
+      return a;
+    } else {
+      return findGcd(b, a % b);
+    }
+  }
+
+  int findLcm(int a, int b) {
+    return (a * b) ~/ findGcd(a, b);
+  }
 
   @override
   Future<int> calculate(Stream<String> input) async {
     final (program, nodes) = await parseInput(input);
-    var state = State.initialPartTwo(nodes);
-    print('Starting search with ${state.currentNodes.length} starting nodes');
-    while (!state.currentNodes.every((n) => n.endsWith('Z'))) {
-      state = program.step(state);
-      if (state.programCounter % 10000000 == 0) {
-        print('Program counter: ${state.programCounter}');
+    final startingNodes = nodes.keys.where((n) => n.endsWith('A'));
+    final cycles = <Cycle>[];
+
+    for (final startingNode in startingNodes) {
+      final seenEnds = <String, int>{};
+      var state = State.initial(nodes, currentNode: startingNode);
+      while (!seenEnds.containsKey(state.currentNode)) {
+        if (state.currentNode.endsWith('Z')) {
+          seenEnds[state.currentNode] = state.programCounter;
+        }
+        state = program.step(state);
       }
+      final cycleLength = state.programCounter - seenEnds[state.currentNode]!;
+      final cycle = Cycle(
+        start: state.programCounter - cycleLength,
+        length: cycleLength,
+      );
+      cycles.add(cycle);
     }
-    return state.programCounter;
+
+    if (cycles.any((c) => c.start != c.length)) {
+      throw Exception(
+          "I'm not implementing that, my input matches this assumption");
+    }
+    return cycles.map((c) => c.length).reduce(findLcm);
   }
 }
 
