@@ -5,6 +5,7 @@ import 'package:aoc/days/day_04.dart' as day04;
 import 'package:aoc/days/day_05.dart' as day05;
 import 'package:aoc/days/day_06.dart' as day06;
 import 'package:aoc/days/day_07.dart' as day07;
+import 'package:aoc/days/day_08.dart' as day08;
 import 'package:meta/meta.dart';
 
 const List<Day<Part, Part>> _days = [
@@ -15,6 +16,7 @@ const List<Day<Part, Part>> _days = [
   day05.day,
   day06.day,
   day07.day,
+  day08.day,
 ];
 
 @immutable
