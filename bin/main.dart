@@ -62,5 +62,11 @@ Future<void> main(List<String> args) async {
     results.add(partTwo.calculateString(inputReader.readLines()));
   }
 
-  print('Results: ${await Future.wait(results)}');
+  final startTime = DateTime.now();
+  final values = await Future.wait(results);
+  final stopTime = DateTime.now();
+  print(
+    'Executed ${results.length} part(s) in ${stopTime.difference(startTime)}',
+  );
+  print('Results: $values');
 }

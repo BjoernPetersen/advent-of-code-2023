@@ -34,10 +34,10 @@ void main() {
         });
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(lessThan(208902075)));
+          expect(part.calculate(reader.readLines()), completion(12634632));
         });
       },
-      skip: true,
+      skip: false,
     );
   });
 }
