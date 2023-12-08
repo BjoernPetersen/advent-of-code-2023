@@ -144,7 +144,7 @@ final class PartOne implements IntPart {
   }
 }
 
-const enableMultithreading = false;
+const enableMultithreading = true;
 
 @immutable
 final class PartTwo implements IntPart {
@@ -189,8 +189,6 @@ class Calculator {
       {required this.almanac, required this.from, required this.length});
 
   Future<int> calculate() {
-    final from = this.from;
-    final length = this.length;
     return Isolate.run(() {
       var minLocation = almanac.findLocationNumber(from);
       for (var seed = from; seed < from + length; seed += 1) {
