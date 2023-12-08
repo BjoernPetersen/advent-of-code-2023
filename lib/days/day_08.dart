@@ -6,20 +6,23 @@ typedef NodeMap = Map<String, (String, String)>;
 @immutable
 class State {
   final int programCounter;
-  final String currentNode;
+  final List<String> currentNodes;
   final NodeMap nodes;
 
-  State._(this.programCounter, this.currentNode, this.nodes);
+  State._(this.programCounter, this.currentNodes, this.nodes);
 
-  State.initial(this.nodes)
+  State.initialPartOne(this.nodes)
       : programCounter = 0,
-        currentNode = 'AAA';
+        currentNodes = const ['AAA'];
 
-  State nextNode(String node) {
-    return State._(programCounter + 1, node, nodes);
+  State.initialPartTwo(this.nodes)
+      : programCounter = 0,
+        currentNodes =
+            nodes.keys.where((n) => n.endsWith('A')).toList(growable: false);
+
+  State nextNodes(List<String> nextNodes) {
+    return State._(programCounter + 1, nextNodes, nodes);
   }
-
-  bool get isFinished => currentNode == 'ZZZ';
 }
 
 @immutable
@@ -30,12 +33,15 @@ final class Program {
 
   State step(State state) {
     final instruction = raw[state.programCounter % raw.length];
-    final (left, right) = state.nodes[state.currentNode]!;
-    if (instruction == 'R') {
-      return state.nextNode(right);
-    } else {
-      return state.nextNode(left);
-    }
+    final nextNodes = state.currentNodes.map((currentNode) {
+      final (left, right) = state.nodes[currentNode]!;
+      if (instruction == 'R') {
+        return right;
+      } else {
+        return left;
+      }
+    });
+    return state.nextNodes(nextNodes.toList(growable: false));
   }
 }
 
@@ -67,8 +73,8 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final (program, nodes) = await parseInput(input);
-    var state = State.initial(nodes);
-    while (!state.isFinished) {
+    var state = State.initialPartOne(nodes);
+    while (state.currentNodes[0] != 'ZZZ') {
       state = program.step(state);
     }
     return state.programCounter;
@@ -82,9 +88,13 @@ final class PartTwo implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final (program, nodes) = await parseInput(input);
-    var state = State.initial(nodes);
-    while (!state.isFinished) {
+    var state = State.initialPartTwo(nodes);
+    print('Starting search with ${state.currentNodes.length} starting nodes');
+    while (!state.currentNodes.every((n) => n.endsWith('Z'))) {
       state = program.step(state);
+      if (state.programCounter % 10000000 == 0) {
+        print('Program counter: ${state.programCounter}');
+      }
     }
     return state.programCounter;
   }
