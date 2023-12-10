@@ -25,7 +25,7 @@ void main() {
       }
       test('input passes', () {
         final reader = getInputReader(dayNum);
-        expect(part.calculate(reader.readLines()), completion(1884768153));
+        expect(part.calculate(reader.readLines()), completion(6838));
       });
     });
     group(
@@ -38,7 +38,10 @@ void main() {
         });
 
         for (final (example, expectedResult) in [
-          ('1', 114),
+          ('3-simple-enclosure', 4),
+          ('4-squeezy-enclosure', 4),
+          ('5-larger', 8),
+          ('6-larger-with-junk', 10),
         ]) {
           test('example $example passes', () {
             final reader = getExampleReader(dayNum, example);

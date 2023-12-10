@@ -56,23 +56,22 @@ class Pipe {
 
   bool get isStartingPipe => char == 'S';
 
-  Iterable<Vector> getOutflows(Vector? from) {
-    final outflows = _directions
-        .map((v) => location + v)
-        .where((v) => v != from)
-        .toList(growable: false);
+  Iterable<Vector> get allOutflows => _directions.map((v) => location + v);
 
-    if (from != null && outflows.length == _directions.length) {
-      // Not connected to from
-      return [];
+  Vector? getOutflow(Vector inflow) {
+    if (isStartingPipe) {
+      throw UnsupportedError('Start pipe has multiple outflows');
     }
 
-    return outflows;
+    return _directions
+        .map((v) => location + v)
+        .where((v) => v != inflow)
+        .singleOrNull;
   }
 
   @override
   String toString() {
-    return '$char ($location)';
+    return '$char $location';
   }
 }
 
@@ -128,41 +127,36 @@ class Grid {
 final class PartOne implements IntPart {
   const PartOne();
 
-  int walk(
-    Grid grid, {
-    required int steps,
-    required Pipe currentPipe,
-    Pipe? previousPipe,
-  }) {
-    if (steps > 0 && currentPipe.isStartingPipe) {
-      return steps;
-    }
-
-    for (final outflow in currentPipe.getOutflows(previousPipe?.location)) {
-      final outPipe = grid[outflow];
-      if (outPipe == null) {
-        continue;
-      }
-
-      final outResult = walk(
-        grid,
-        steps: steps + 1,
-        currentPipe: outPipe,
-        previousPipe: currentPipe,
-      );
-      if (outResult > -1) {
-        return outResult;
-      }
-    }
-
-    return -1;
-  }
-
   @override
   Future<int> calculate(Stream<String> input) async {
     final grid = await Grid.fromInput(input);
+
     final startingPipe = grid.startingPipe;
-    return walk(grid, steps: 0, currentPipe: startingPipe) ~/ 2;
+    for (final initialOutflow in startingPipe.allOutflows) {
+      var steps = 1;
+      var previousPipe = startingPipe;
+      var currentPipe = grid[initialOutflow];
+
+      while (currentPipe != null && !currentPipe.isStartingPipe) {
+        final outflow = currentPipe.getOutflow(previousPipe.location);
+        if (outflow == null) {
+          // dead end
+          currentPipe = null;
+          break;
+        }
+        previousPipe = currentPipe;
+        currentPipe = grid[outflow];
+        steps += 1;
+      }
+
+      if (currentPipe == null) {
+        continue;
+      }
+
+      return steps ~/ 2;
+    }
+
+    throw Exception('No result found');
   }
 }
 
@@ -172,6 +166,7 @@ final class PartTwo implements IntPart {
 
   @override
   Future<int> calculate(Stream<String> input) async {
+    final grid = await Grid.fromInput(input);
     return 0;
   }
 }
