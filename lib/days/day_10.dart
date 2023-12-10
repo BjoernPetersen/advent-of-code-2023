@@ -140,6 +140,8 @@ class Grid {
 List<Pipe> findLoop(Grid grid) {
   final startingPipe = grid.startingPipe;
   for (final initialOutflow in startingPipe.allOutflows) {
+    // Summary: venture out in all directions from the start pipe until we hit the start pipe or a
+    // dead end. No need to keep a stack since none of the pipes (except for the start pipe) branch.
     var loop = <Pipe>[];
     var previousPipe = startingPipe;
     var currentPipe = grid[initialOutflow];
