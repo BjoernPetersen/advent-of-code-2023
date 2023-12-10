@@ -1,13 +1,6 @@
 import 'package:aoc/day.dart';
+import 'package:aoc/days/util.dart';
 import 'package:meta/meta.dart';
-
-extension on String {
-  Iterable<String> get chars sync* {
-    for (var i = 0; i < length; i += 1) {
-      yield this[i];
-    }
-  }
-}
 
 enum Rules {
   serious('AKQJT98765432'),
