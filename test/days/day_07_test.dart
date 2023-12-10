@@ -15,7 +15,7 @@ void main() {
         expect(part.calculate(reader.readLines()), completion(6440));
       });
       test('example 2 passes', () {
-        final reader = getExampleReader(dayNum, '2');
+        final reader = getExampleReader(dayNum, 'reddit');
         expect(part.calculate(reader.readLines()), completion(6592));
       });
       test('input passes', () {
@@ -37,7 +37,7 @@ void main() {
           expect(part.calculate(reader.readLines()), completion(5905));
         });
         test('example 2 passes', () {
-          final reader = getExampleReader(dayNum, '2');
+          final reader = getExampleReader(dayNum, 'reddit');
           expect(part.calculate(reader.readLines()), completion(6839));
         });
         test('input passes', () {
