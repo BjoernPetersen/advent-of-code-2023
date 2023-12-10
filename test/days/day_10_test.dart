@@ -51,10 +51,10 @@ void main() {
         }
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(1031));
+          expect(part.calculate(reader.readLines()), completion(451));
         });
       },
-      skip: true,
+      skip: false,
     );
   });
 }

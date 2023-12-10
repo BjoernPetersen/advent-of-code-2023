@@ -13,6 +13,10 @@ class Vector {
     return Vector(x + other.x, y + other.y);
   }
 
+  Vector operator -(Vector other) {
+    return Vector(x - other.x, y - other.y);
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -32,11 +36,21 @@ class Vector {
 
 @immutable
 class Pipe {
-  final String char;
   final Vector location;
   final List<Vector> _directions;
 
-  const Pipe._(this.char, this.location, this._directions);
+  const Pipe._(this.location, this._directions);
+
+  factory Pipe.fromNeighbors({
+    required Vector location,
+    required Vector inflow,
+    required Vector outflow,
+  }) {
+    return Pipe._(
+      location,
+      [inflow - location, outflow - location],
+    );
+  }
 
   factory Pipe.fromChar(String char, Vector location) {
     final directions = switch (char) {
@@ -51,10 +65,10 @@ class Pipe {
       _ => throw ArgumentError.value(char, 'char', 'invalid pipe')
     };
 
-    return Pipe._(char, location, directions);
+    return Pipe._(location, directions);
   }
 
-  bool get isStartingPipe => char == 'S';
+  bool get isStartingPipe => _directions.length > 2;
 
   Iterable<Vector> get allOutflows => _directions.map((v) => location + v);
 
@@ -71,7 +85,7 @@ class Pipe {
 
   @override
   String toString() {
-    return '$char $location';
+    return '$location';
   }
 }
 
@@ -123,6 +137,41 @@ class Grid {
   Pipe get startingPipe => this[_startingLocation]!;
 }
 
+List<Pipe> findLoop(Grid grid) {
+  final startingPipe = grid.startingPipe;
+  for (final initialOutflow in startingPipe.allOutflows) {
+    var loop = <Pipe>[];
+    var previousPipe = startingPipe;
+    var currentPipe = grid[initialOutflow];
+
+    while (currentPipe != null && !currentPipe.isStartingPipe) {
+      loop.add(currentPipe);
+      final outflow = currentPipe.getOutflow(previousPipe.location);
+      if (outflow == null) {
+        // dead end
+        currentPipe = null;
+        break;
+      }
+      previousPipe = currentPipe;
+      currentPipe = grid[outflow];
+    }
+
+    if (currentPipe == null) {
+      continue;
+    }
+
+    final startReplacement = Pipe.fromNeighbors(
+      location: grid.startingPipe.location,
+      inflow: previousPipe.location,
+      outflow: initialOutflow,
+    );
+    loop.add(startReplacement);
+    return loop;
+  }
+
+  throw Exception('No loop found');
+}
+
 @immutable
 final class PartOne implements IntPart {
   const PartOne();
@@ -130,33 +179,7 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final grid = await Grid.fromInput(input);
-
-    final startingPipe = grid.startingPipe;
-    for (final initialOutflow in startingPipe.allOutflows) {
-      var steps = 1;
-      var previousPipe = startingPipe;
-      var currentPipe = grid[initialOutflow];
-
-      while (currentPipe != null && !currentPipe.isStartingPipe) {
-        final outflow = currentPipe.getOutflow(previousPipe.location);
-        if (outflow == null) {
-          // dead end
-          currentPipe = null;
-          break;
-        }
-        previousPipe = currentPipe;
-        currentPipe = grid[outflow];
-        steps += 1;
-      }
-
-      if (currentPipe == null) {
-        continue;
-      }
-
-      return steps ~/ 2;
-    }
-
-    throw Exception('No result found');
+    return findLoop(grid).length ~/ 2;
   }
 }
 
@@ -164,10 +187,24 @@ final class PartOne implements IntPart {
 final class PartTwo implements IntPart {
   const PartTwo();
 
+  int calculateArea(List<Pipe> loop) {
+    // Shoelace formula (trapezoid)
+    var sum = 0;
+    for (var index = 0; index < loop.length; index += 1) {
+      final vector = loop[index].location;
+      final nextVector = loop[(index + 1) % loop.length].location;
+      sum += (vector.y + nextVector.y) * (vector.x - nextVector.x);
+    }
+    return (sum ~/ 2).abs();
+  }
+
   @override
   Future<int> calculate(Stream<String> input) async {
     final grid = await Grid.fromInput(input);
-    return 0;
+    final loop = findLoop(grid);
+    final area = calculateArea(loop);
+    // Pick's theorem
+    return area - loop.length ~/ 2 + 1;
   }
 }
 
