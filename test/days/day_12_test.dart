@@ -38,7 +38,8 @@ void main() {
         });
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(548241300348335));
+          expect(
+              part.calculate(reader.readLines()), completion(548241300348335));
         });
       },
       skip: false,
