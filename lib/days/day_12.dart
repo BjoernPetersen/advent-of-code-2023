@@ -1,12 +1,34 @@
 import 'package:aoc/day.dart';
 import 'package:aoc/days/util.dart';
 import 'package:collection/collection.dart';
+import 'package:memoized/memoized.dart';
 import 'package:meta/meta.dart';
+
+class DeepEqualList<T> extends DelegatingList<T> {
+  const DeepEqualList(super.list);
+
+  @override
+  bool operator ==(Object other) {
+    if (other is DeepEqualList<T>) {
+      return const ListEquality().equals(this, other);
+    }
+    return false;
+  }
+
+  @override
+  int get hashCode => const ListEquality().hash(this);
+}
 
 @immutable
 class NonogramRow {
+  static final int Function(String cells, DeepEqualList<int> hints)
+      _countSolutions = Memoized2(
+    _internalCountSolutions,
+    capacity: 1000000,
+  );
+
   final List<int> hints;
-  final List<bool?> cells;
+  final String cells;
 
   const NonogramRow({required this.hints, required this.cells});
 
@@ -22,21 +44,13 @@ class NonogramRow {
 
     return NonogramRow(
       hints: hints.split(',').map(int.parse).toList(growable: false),
-      cells: row.chars
-          .map((c) => switch (c) {
-                '#' => true,
-                '.' => false,
-                '?' => null,
-                _ => throw ArgumentError('Invalid character: $c'),
-              })
-          .toList(growable: false),
+      cells: row,
     );
   }
 
-  static int _countSolutions(List<bool?> cells, List<int> hints) {
-    print('$cells $hints');
+  static int _internalCountSolutions(String cells, DeepEqualList<int> hints) {
     if (hints.isEmpty) {
-      return cells.any((c) => c == true) ? 0 : 1;
+      return cells.chars.any((c) => c == '#') ? 0 : 1;
     }
 
     if (cells.isEmpty) {
@@ -47,56 +61,45 @@ class NonogramRow {
       return 0;
     }
 
-    final firstCell = cells.first;
+    final firstCell = cells.chars.first;
     switch (firstCell) {
-      case false:
-        return _countSolutions(cells.slice(1), hints);
-      case null:
-        cells[0] = true;
-        final a = _countSolutions(cells, hints);
-        cells[0] = false;
-        final b = _countSolutions(cells, hints);
-        cells[0] = null;
+      case '.':
+        return _countSolutions(cells.substring(1), hints);
+      case '?':
+        final a = _countSolutions('#${cells.substring(1)}', hints);
+        final b = _countSolutions('.${cells.substring(1)}', hints);
         return a + b;
-      case true:
+      case '#':
         final hint = hints.first;
         for (var i = 0; i < hint; i += 1) {
-          if (cells[i] == false) {
+          if (cells[i] == '.') {
             return 0;
           }
         }
 
         if (hint < cells.length) {
-          if (cells[hint] == true) {
+          if (cells[hint] == '#') {
             return 0;
           }
-          return _countSolutions(cells.slice(hint + 1), hints.slice(1));
+          return _countSolutions(
+              cells.substring(hint + 1), DeepEqualList(hints.slice(1)));
         } else if (hint == cells.length) {
-          return _countSolutions([], hints.slice(1));
+          return _countSolutions('', DeepEqualList(hints.slice(1)));
         } else {
           return 0;
         }
+      default:
+        throw StateError('Invalid char: $firstCell');
     }
   }
 
   int countSolutions() {
-    print('${DateTime.now()} Starting new row: $this');
-    return _countSolutions(cells.toList(growable: false), hints);
+    return _countSolutions(cells, DeepEqualList(hints));
   }
 
   @override
   String toString() {
-    final cellString = cells.map((c) {
-      switch (c) {
-        case true:
-          return '#';
-        case false:
-          return '.';
-        case null:
-          return '?';
-      }
-    }).join();
-    return '$cellString $hints';
+    return '$cells $hints';
   }
 }
 

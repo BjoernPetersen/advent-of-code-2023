@@ -11,6 +11,7 @@ dependencies:
   async: ^2.11.0
   collection: ^1.18.0
   logger: ^2.0.0
+  memoized: ^2.0.0
   meta: ^1.0.0
 
 dev_dependencies:
