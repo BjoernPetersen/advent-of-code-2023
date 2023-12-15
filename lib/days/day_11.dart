@@ -4,17 +4,14 @@ import 'package:meta/meta.dart';
 
 @immutable
 class Universe {
-  final List<List<int>> _quadrants;
   final List<Vector> galaxies;
 
-  int get width => _quadrants[0].length;
+  const Universe._(this.galaxies);
 
-  int get height => _quadrants.length;
-
-  const Universe._(this._quadrants, this.galaxies);
-
-  static Future<Universe> fromInput(Stream<String> input) async {
+  static Future<Universe> fromInput(Stream<String> input,
+      {required int expansionFactor}) async {
     final result = <List<int>>[];
+    final emptyRows = <int>[];
     late final List<int> columnCounts;
 
     int idCounter = 1;
@@ -35,58 +32,59 @@ class Universe {
           row.add(0);
         }
       }
-      result.add(row);
+
       if (rowIsEmpty) {
-        result.add(row);
+        emptyRows.add(result.length);
       }
+
+      result.add(row);
     }
 
     final galaxies = <Vector>[];
-    final expanded = List.generate(
-      result.length,
-      (y) {
-        final row = result[y];
-        final newRow = <int>[];
-        for(final (index, id) in row.indexed) {
-          if (id != 0) {
-            final location = Vector(x:newRow.length, y: y);
-            galaxies.add(location);
-          }
+    var emptyRowsAdded = 0;
+    for (var y = 0; y < result.length; y += 1) {
+      if (emptyRows.contains(y)) {
+        emptyRowsAdded += expansionFactor - 1;
+        continue;
+      }
 
-          if (columnCounts[index] == 0) {
-            newRow.add(0);
-            newRow.add(0);
-          } else {
-            newRow.add(id);
-          }
+      final row = result[y];
+      final newY = y + emptyRowsAdded - 1;
+
+      var emptyColumnsAdded = 0;
+      for (var x = 0; x < row.length; x += 1) {
+        if (columnCounts[x] == 0) {
+          emptyColumnsAdded += expansionFactor - 1;
+          continue;
         }
-        return row.indexed.expand((e) {
-          final (index, value) = e;
-          if (columnCounts[index] == 0) {
-            return [value, value];
-          } else {
-            return [value];
-          }
-        }).toList(growable: false);
-      },
-      growable: false,
-    );
-    return Universe._(expanded, galaxies);
+
+        if (row[x] != 0) {
+          final newX = x + emptyColumnsAdded;
+          final location = Vector(x: newX, y: newY);
+          galaxies.add(location);
+        }
+      }
+    }
+
+    return Universe._(galaxies);
   }
 
-  int operator [](Vector position) {
-    return _quadrants[position.y][position.x];
-  }
-
-  String toHumanReadable() {
-    return _quadrants
-        .map((row) => row.map((id) => id == 0 ? '.' : id).join())
-        .join('\n');
+  int get sumOfGalaxyPairDistances {
+    var sum = 0;
+    for (final (index, galaxy) in galaxies.indexed) {
+      for (var otherIndex = index + 1;
+          otherIndex < galaxies.length;
+          otherIndex += 1) {
+        final otherGalaxy = galaxies[otherIndex];
+        sum += (otherGalaxy - galaxy).manhattanNorm();
+      }
+    }
+    return sum;
   }
 
   @override
   String toString() {
-    return 'Universe [${width}x$height][${galaxies.length}]';
+    return 'Universe [${galaxies.length}]';
   }
 }
 
@@ -96,17 +94,8 @@ final class PartOne implements IntPart {
 
   @override
   Future<int> calculate(Stream<String> input) async {
-    final universe = await Universe.fromInput(input);
-    // Whoops, didn't need that two-dimensional array after all.
-    final galaxies = universe.galaxies;
-    var sum = 0;
-    for(final (index, galaxy) in galaxies.indexed) {
-      for(var otherIndex = index + 1; otherIndex < galaxies.length; otherIndex +=1) {
-        final otherGalaxy = galaxies[otherIndex];
-        sum += (otherGalaxy - galaxy).manhattanNorm();
-      }
-    }
-    return sum;
+    final universe = await Universe.fromInput(input, expansionFactor: 2);
+    return universe.sumOfGalaxyPairDistances;
   }
 }
 
@@ -116,17 +105,8 @@ final class PartTwo implements IntPart {
 
   @override
   Future<int> calculate(Stream<String> input) async {
-    final universe = await Universe.fromInput(input);
-    // Whoops, didn't need that two-dimensional array after all.
-    final galaxies = universe.galaxies;
-    var sum = 0;
-    for(final (index, galaxy) in galaxies.indexed) {
-      for(var otherIndex = index + 1; otherIndex < galaxies.length; otherIndex +=1) {
-        final otherGalaxy = galaxies[otherIndex];
-        sum += (otherGalaxy - galaxy).manhattanNorm();
-      }
-    }
-    return sum;
+    final universe = await Universe.fromInput(input, expansionFactor: 1000000);
+    return universe.sumOfGalaxyPairDistances;
   }
 }
 

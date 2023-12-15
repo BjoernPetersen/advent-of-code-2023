@@ -1,4 +1,5 @@
 import 'package:aoc/day.dart';
+import 'package:aoc/days/day_11.dart';
 import 'package:test/test.dart';
 
 import '../input_helper.dart';
@@ -34,18 +35,22 @@ void main() {
           part = day.partTwo as IntPart;
         });
 
-        for (final (example, expectedResult) in [
-          ('1', 1030),
+        for (final (example, factor, expectedResult) in [
+          ('1', 10, 1030),
+          ('1', 100, 8410),
         ]) {
-          test('example $example passes', () {
+          test('example $example passes with factor $factor', () async {
             final reader = getExampleReader(dayNum, example);
-            expect(
-                part.calculate(reader.readLines()), completion(expectedResult));
+            final universe = await Universe.fromInput(
+              reader.readLines(),
+              expansionFactor: factor,
+            );
+            expect(universe.sumOfGalaxyPairDistances, expectedResult);
           });
         }
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(451));
+          expect(part.calculate(reader.readLines()), completion(622120986954));
         });
       },
       skip: false,
