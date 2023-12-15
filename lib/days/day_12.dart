@@ -1,20 +1,9 @@
+import 'dart:collection';
+
 import 'package:aoc/day.dart';
 import 'package:aoc/days/util.dart';
 import 'package:collection/collection.dart';
 import 'package:meta/meta.dart';
-
-Iterable<List<bool>> getPermutations(List<bool?> cells) sync* {
-  final unknownIndex = cells.indexOf(null);
-  if (unknownIndex > -1) {
-    cells[unknownIndex] = true;
-    yield* getPermutations(cells);
-    cells[unknownIndex] = false;
-    yield* getPermutations(cells);
-    cells[unknownIndex] = null;
-  } else {
-    yield cells.cast<bool>();
-  }
-}
 
 @immutable
 class NonogramRow {
@@ -46,26 +35,51 @@ class NonogramRow {
     );
   }
 
-  bool isSolution(List<bool> row) {
-    final groups = <int>[];
-    var current = 0;
-    for (final cell in row) {
-      if (cell) {
-        current += 1;
-      } else if (current > 0) {
-        groups.add(current);
-        current = 0;
-      }
-    }
-    if (current > 0) {
-      groups.add(current);
+  int _countSolutions(List<bool?> cells, List<int> hints) {
+    if (hints.isEmpty) {
+      return cells.any((c) => c == true) ? 0 : 1;
     }
 
-    return ListEquality().equals(groups, hints);
+    if (cells.isEmpty) {
+      return 0;
+    }
+
+    if (cells.length < hints.reduce((a, b) => a + b) + hints.length - 1) {
+      return 0;
+    }
+
+    final firstCell = cells.first;
+    switch (firstCell) {
+      case false:
+        return _countSolutions(cells.slice(1), hints);
+      case null:
+        cells[0] = true;
+        final a = _countSolutions(cells, hints);
+        cells[0] = false;
+        final b = _countSolutions(cells, hints);
+        cells[0] = null;
+        return a + b;
+      case true:
+        final hint = hints.first;
+        for (var i = 0; i < hint; i += 1) {
+          if (cells[i] == false) {
+            return 0;
+          }
+        }
+
+        if (hint < cells.length) {
+          if (cells[hint] == true) {
+            return 0;
+          }
+          return _countSolutions(cells.slice(hint + 1), hints.slice(1));
+        } else {
+          return _countSolutions([], hints.slice(1));
+        }
+    }
   }
 
   int countSolutions() {
-    return getPermutations(cells.toList(growable: false)).where((row) => isSolution(row)).length;
+    return _countSolutions(cells.toList(growable: false), hints);
   }
 }
 
