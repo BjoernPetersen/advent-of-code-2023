@@ -1,55 +1,14 @@
 import 'dart:collection';
 
 import 'package:aoc/day.dart';
+import 'package:aoc/days/util.dart';
 import 'package:meta/meta.dart';
 
-@immutable
-final class Vector {
-  static const Vector zero = Vector();
-  static const Iterable<Vector> allDirections = [
-    Vector(x: 1),
-    Vector(x: 1, y: 1),
-    Vector(y: 1),
-    Vector(x: -1, y: 1),
-    Vector(x: -1),
-    Vector(x: -1, y: -1),
-    Vector(y: -1),
-    Vector(x: 1, y: -1),
-  ];
-
-  final int x;
-  final int y;
-
-  const Vector({
-    this.x = 0,
-    this.y = 0,
-  });
-
-  Vector operator +(Vector other) {
-    return Vector(x: x + other.x, y: y + other.y);
-  }
-
-  Vector operator -(Vector other) {
-    return Vector(x: x - other.x, y: y - other.y);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is Vector && x == other.x && y == other.y;
-  }
-
-  @override
-  int get hashCode => Object.hash(x, y);
-
+extension on Vector {
   Iterable<Vector> get neighbors sync* {
-    for (final direction in allDirections) {
+    for (final direction in Vector.starDirections) {
       yield this + direction;
     }
-  }
-
-  @override
-  String toString() {
-    return '($x, $y)';
   }
 }
 

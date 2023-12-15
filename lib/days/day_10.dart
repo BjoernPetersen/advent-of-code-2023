@@ -3,38 +3,6 @@ import 'package:aoc/days/util.dart';
 import 'package:meta/meta.dart';
 
 @immutable
-class Vector {
-  final int x;
-  final int y;
-
-  const Vector(this.x, this.y);
-
-  Vector operator +(Vector other) {
-    return Vector(x + other.x, y + other.y);
-  }
-
-  Vector operator -(Vector other) {
-    return Vector(x - other.x, y - other.y);
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Vector &&
-          runtimeType == other.runtimeType &&
-          x == other.x &&
-          y == other.y;
-
-  @override
-  int get hashCode => x.hashCode ^ y.hashCode;
-
-  @override
-  String toString() {
-    return '($x, $y)';
-  }
-}
-
-@immutable
 class Pipe {
   final Vector location;
   final List<Vector> _directions;
@@ -54,13 +22,18 @@ class Pipe {
 
   factory Pipe.fromChar(String char, Vector location) {
     final directions = switch (char) {
-      '|' => [Vector(0, -1), Vector(0, 1)],
-      '-' => [Vector(1, 0), Vector(-1, 0)],
-      'L' => [Vector(0, -1), Vector(1, 0)],
-      'J' => [Vector(-1, 0), Vector(0, -1)],
-      '7' => [Vector(-1, 0), Vector(0, 1)],
-      'F' => [Vector(1, 0), Vector(0, 1)],
-      'S' => [Vector(1, 0), Vector(0, 1), Vector(-1, 0), Vector(0, -1)],
+      '|' => [Vector(x: 0, y: -1), Vector(x: 0, y: 1)],
+      '-' => [Vector(x: 1, y: 0), Vector(x: -1, y: 0)],
+      'L' => [Vector(x: 0, y: -1), Vector(x: 1, y: 0)],
+      'J' => [Vector(x: -1, y: 0), Vector(x: 0, y: -1)],
+      '7' => [Vector(x: -1, y: 0), Vector(x: 0, y: 1)],
+      'F' => [Vector(x: 1, y: 0), Vector(x: 0, y: 1)],
+      'S' => [
+          Vector(x: 1, y: 0),
+          Vector(x: 0, y: 1),
+          Vector(x: -1, y: 0),
+          Vector(x: 0, y: -1)
+        ],
       '.' => <Vector>[],
       _ => throw ArgumentError.value(char, 'char', 'invalid pipe')
     };
@@ -107,7 +80,7 @@ class Grid {
       final row = <Pipe>[];
       final y = pipes.length;
       for (final (x, char) in line.chars.indexed) {
-        final location = Vector(x, y);
+        final location = Vector(x: x, y: y);
         if (char == 'S') {
           startingLocation = location;
         }
