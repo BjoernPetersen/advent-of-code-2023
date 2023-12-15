@@ -13,6 +13,10 @@ extension CharIterable on String {
 @immutable
 class Vector {
   static const Vector zero = Vector();
+  static const Vector north = Vector(y: -1);
+  static const Vector east = Vector(x: 1);
+  static const Vector south = Vector(y: 1);
+  static const Vector west = Vector(x: -1);
   static const Iterable<Vector> starDirections = [
     Vector(x: 1),
     Vector(x: 1, y: 1),
