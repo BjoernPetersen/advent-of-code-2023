@@ -34,7 +34,6 @@ class PositionedRock {
   }
 }
 
-@immutable
 class Platform {
   final int width;
   final List<List<Rock?>> _rocks;
@@ -60,14 +59,10 @@ class Platform {
         position.y < _rocks.length;
   }
 
-  Platform tilt(Vector direction) {
+  void tilt(Vector direction) {
     final width = this.width;
     final height = _rocks.length;
-    final List<List<Rock?>> rocks = List.generate(
-      height,
-      (index) => List.filled(width, null),
-      growable: false,
-    );
+    final List<List<Rock?>> rocks = _rocks;
 
     final int yStart;
     final int yDirection;
@@ -119,8 +114,6 @@ class Platform {
         }
       }
     }
-
-    return Platform._(rocks);
   }
 
   Iterable<PositionedRock> get rocks sync* {
@@ -148,7 +141,8 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final platform = await Platform.fromInput(input);
-    return platform.tilt(Vector.north).totalLoad;
+    platform.tilt(Vector.north);
+    return platform.totalLoad;
   }
 }
 
@@ -167,12 +161,17 @@ final class PartTwo implements IntPart {
       Vector.east
     ];
 
-    for (var i = 0; i < 1000000000; i += 1) {
-      if (i % 100000 == 0) {
-        print(i);
+    final stopwatch = Stopwatch()..start();
+    final cycles = 1000000000;
+    for (var cycle = 0; cycle < cycles; cycle += 1) {
+      if (cycle > 0 && cycle % 100000 == 0) {
+        final remaining = cycles - cycle;
+        final elapsed = stopwatch.elapsed;
+        final eta = elapsed * remaining ~/ cycle;
+        print('${(cycle / cycles).toStringAsFixed(2)}% done, ETA: $eta');
       }
       for (final direction in cycleDirections) {
-        platform = platform.tilt(direction);
+        platform.tilt(direction);
       }
     }
 
