@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:aoc/day.dart';
 import 'package:aoc/days/util.dart';
 import 'package:collection/collection.dart';
@@ -35,7 +33,8 @@ class NonogramRow {
     );
   }
 
-  int _countSolutions(List<bool?> cells, List<int> hints) {
+  static int _countSolutions(List<bool?> cells, List<int> hints) {
+    print('$cells $hints');
     if (hints.isEmpty) {
       return cells.any((c) => c == true) ? 0 : 1;
     }
@@ -72,14 +71,32 @@ class NonogramRow {
             return 0;
           }
           return _countSolutions(cells.slice(hint + 1), hints.slice(1));
-        } else {
+        } else if (hint == cells.length) {
           return _countSolutions([], hints.slice(1));
+        } else {
+          return 0;
         }
     }
   }
 
   int countSolutions() {
+    print('${DateTime.now()} Starting new row: $this');
     return _countSolutions(cells.toList(growable: false), hints);
+  }
+
+  @override
+  String toString() {
+    final cellString = cells.map((c) {
+      switch (c) {
+        case true:
+          return '#';
+        case false:
+          return '.';
+        case null:
+          return '?';
+      }
+    }).join();
+    return '$cellString $hints';
   }
 }
 

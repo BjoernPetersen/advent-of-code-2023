@@ -14,6 +14,10 @@ void main() {
         final reader = getExampleReader(dayNum, '1');
         expect(part.calculate(reader.readLines()), completion(21));
       });
+      test('extracted example passes', () {
+        final reader = getExampleReader(dayNum, 'extract');
+        expect(part.calculate(reader.readLines()), completion(21));
+      });
       test('input passes', () {
         final reader = getInputReader(dayNum);
         expect(part.calculate(reader.readLines()), completion(7506));
