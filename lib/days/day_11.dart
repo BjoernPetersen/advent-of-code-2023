@@ -8,8 +8,10 @@ class Universe {
 
   const Universe._(this.galaxies);
 
-  static Future<Universe> fromInput(Stream<String> input,
-      {required int expansionFactor}) async {
+  static Future<Universe> fromInput(
+    Stream<String> input, {
+    required int expansionFactor,
+  }) async {
     final result = <List<int>>[];
     final emptyRows = <int>[];
     late final List<int> columnCounts;
