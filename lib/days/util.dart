@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:meta/meta.dart';
 
 extension CharIterable on String {
@@ -42,6 +44,29 @@ class Vector {
       x: x - other.x,
       y: y - other.y,
     );
+  }
+
+  Vector abs() {
+    return Vector(
+      x: x.abs(),
+      y: y.abs(),
+    );
+  }
+
+  int manhattanNorm() {
+    final abs = this.abs();
+    return abs.x + abs.y;
+  }
+
+  double norm(int p) {
+    final sum = pow(x.abs(), p) + pow(y.abs(), p);
+
+    if (p == 2) {
+      // Special case for Euclidean norm in hopes that sqrt is faster than pow(n, 1/2)
+      return sqrt(sum);
+    }
+
+    return pow(sum, 1 / p) as double;
   }
 
   @override
