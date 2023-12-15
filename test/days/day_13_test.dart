@@ -30,14 +30,14 @@ void main() {
 
         test('example 1 passes', () {
           final reader = getExampleReader(dayNum, '1');
-          expect(part.calculate(reader.readLines()), completion(2));
+          expect(part.calculate(reader.readLines()), completion(400));
         });
         test('input passes', () {
           final reader = getInputReader(dayNum);
-          expect(part.calculate(reader.readLines()), completion(1031));
+          expect(part.calculate(reader.readLines()), completion(37876));
         });
       },
-      skip: true,
+      skip: false,
     );
   });
 }
