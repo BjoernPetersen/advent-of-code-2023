@@ -16,6 +16,21 @@ class Rock {
       _ => throw ArgumentError('Invalid symbol: $symbol')
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Rock &&
+          runtimeType == other.runtimeType &&
+          isRound == other.isRound;
+
+  @override
+  int get hashCode => isRound.hashCode;
+
+  @override
+  String toString() {
+    return isRound ? 'O' : '#';
+  }
 }
 
 @immutable
@@ -32,8 +47,20 @@ class PositionedRock {
 
     return platformHeight - position.y;
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PositionedRock &&
+          runtimeType == other.runtimeType &&
+          rock == other.rock &&
+          position == other.position;
+
+  @override
+  int get hashCode => rock.hashCode ^ position.hashCode;
 }
 
+@immutable
 class Platform {
   final int width;
   final List<List<Rock?>> _rocks;
@@ -59,10 +86,11 @@ class Platform {
         position.y < _rocks.length;
   }
 
-  void tilt(Vector direction) {
+  Platform tilt(Vector direction) {
     final width = this.width;
     final height = _rocks.length;
-    final List<List<Rock?>> rocks = _rocks;
+    final List<List<Rock?>> rocks =
+        List.generate(height, (index) => List.filled(width, null));
 
     final int yStart;
     final int yDirection;
@@ -114,6 +142,8 @@ class Platform {
         }
       }
     }
+
+    return Platform._(rocks);
   }
 
   Iterable<PositionedRock> get rocks sync* {
@@ -132,6 +162,23 @@ class Platform {
         .map((rock) => rock.calculateNorthLoad(platformHeight: _rocks.length))
         .reduce((a, b) => a + b);
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Platform &&
+          runtimeType == other.runtimeType &&
+          _rocks == other._rocks;
+
+  @override
+  int get hashCode => Object.hashAll(rocks);
+
+  @override
+  String toString() {
+    return _rocks
+        .map((row) => row.map((rock) => rock?.toString() ?? '.').join())
+        .join('\n');
+  }
 }
 
 @immutable
@@ -141,18 +188,55 @@ final class PartOne implements IntPart {
   @override
   Future<int> calculate(Stream<String> input) async {
     final platform = await Platform.fromInput(input);
-    platform.tilt(Vector.north);
-    return platform.totalLoad;
+    return platform.tilt(Vector.north).totalLoad;
   }
+}
+
+@immutable
+class Loop {
+  final Platform platformAtStart;
+  final int start;
+  final int length;
+
+  Loop({
+    required this.platformAtStart,
+    required this.start,
+    required this.length,
+  });
 }
 
 @immutable
 final class PartTwo implements IntPart {
   const PartTwo();
 
+  Loop findLoop(Platform platform, List<Vector> cycleDirections) {
+    final hashByCycle = <int, int>{};
+    var cycle = 0;
+    int cycleStart = -1;
+    while (cycleStart == -1) {
+      for (final direction in cycleDirections) {
+        platform = platform.tilt(direction);
+        final hashCode = platform.hashCode;
+
+        if (hashByCycle.containsKey(hashCode)) {
+          cycleStart = hashByCycle[hashCode]!;
+        }
+
+        hashByCycle[hashCode] = cycle;
+      }
+
+      cycle += 1;
+    }
+
+    return Loop(
+        platformAtStart: platform,
+        start: cycleStart,
+        length: cycle - cycleStart - 1);
+  }
+
   @override
   Future<int> calculate(Stream<String> input) async {
-    var platform = await Platform.fromInput(input);
+    final originalPlatform = await Platform.fromInput(input);
 
     final cycleDirections = [
       Vector.north,
@@ -161,17 +245,13 @@ final class PartTwo implements IntPart {
       Vector.east
     ];
 
-    final stopwatch = Stopwatch()..start();
-    final cycles = 1000000000;
-    for (var cycle = 0; cycle < cycles; cycle += 1) {
-      if (cycle > 0 && cycle % 100000 == 0) {
-        final remaining = cycles - cycle;
-        final elapsed = stopwatch.elapsed;
-        final eta = elapsed * remaining ~/ cycle;
-        print('${(cycle / cycles).toStringAsFixed(2)}% done, ETA: $eta');
-      }
+    final loop = findLoop(originalPlatform, cycleDirections);
+    final remainingCycles = (1000000000 - loop.start - 1) % loop.length;
+
+    var platform = loop.platformAtStart;
+    for (var cycle = 0; cycle < remainingCycles; cycle += 1) {
       for (final direction in cycleDirections) {
-        platform.tilt(direction);
+        platform = platform.tilt(direction);
       }
     }
 
