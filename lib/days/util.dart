@@ -36,6 +36,15 @@ class Vector {
     this.y = 0,
   });
 
+  bool get isHorizontal {
+    if(x != 0 && y != 0) {
+      throw StateError('Vector is diagonal');
+    }
+
+    return x != 0;
+  }
+  bool get isVertical => !isHorizontal;
+
   Vector operator +(Vector other) {
     return Vector(
       x: x + other.x,
@@ -48,6 +57,17 @@ class Vector {
       x: x - other.x,
       y: y - other.y,
     );
+  }
+
+  Vector operator *(int scalar) {
+    return Vector(
+      x: x * scalar,
+      y: y * scalar,
+    );
+  }
+
+  Vector rotate({bool clockwise = true}) {
+    return clockwise ? Vector(x: -y, y: x) : Vector(x: y, y: -x);
   }
 
   Vector abs() {
