@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:aoc/day.dart';
 import 'package:aoc/days/util.dart';
 import 'package:meta/meta.dart';
@@ -137,32 +139,32 @@ Future<Grid<Mirror>> parseGrid(Stream<String> input) async {
   return Grid(grid);
 }
 
+void visit(
+  Grid<Mirror> grid,
+  Set<(Vector, Vector)> visited, {
+  required Vector from,
+  required Vector position,
+}) {
+  if (!visited.add((from, position))) {
+    return;
+  }
+
+  final mirror = grid[position];
+  for (final next in mirror.forwardRay(from)) {
+    if (grid.contains(next)) {
+      visit(
+        grid,
+        visited,
+        from: position,
+        position: next,
+      );
+    }
+  }
+}
+
 @immutable
 final class PartOne implements IntPart {
   const PartOne();
-
-  void visit(
-    Grid<Mirror> grid,
-    Set<(Vector, Vector)> visited, {
-    required Vector from,
-    required Vector position,
-  }) {
-    if (!visited.add((from, position))) {
-      return;
-    }
-
-    final mirror = grid[position];
-    for (final next in mirror.forwardRay(from)) {
-      if (grid.contains(next)) {
-        visit(
-          grid,
-          visited,
-          from: position,
-          position: next,
-        );
-      }
-    }
-  }
 
   @override
   Future<int> calculate(Stream<String> input) async {
@@ -181,6 +183,53 @@ final class PartOne implements IntPart {
   }
 }
 
+@immutable
+final class PartTwo implements IntPart {
+  const PartTwo();
+
+  Iterable<(Vector, Vector)> findStartingPositions(
+      int width, int height) sync* {
+    for (var x = 0; x < width; x += 1) {
+      final topStartPosition = Vector(x: x, y: 0);
+      yield (topStartPosition + Vector.north, topStartPosition);
+
+      final bottomFromPosition = Vector(x: x, y: height);
+      yield (bottomFromPosition, bottomFromPosition + Vector.north);
+    }
+
+    for (var y = 0; y < height; y += 1) {
+      final leftStartPosition = Vector(x: 0, y: y);
+      yield (leftStartPosition + Vector.west, leftStartPosition);
+
+      final rightFromPosition = Vector(x: width, y: y);
+      yield (rightFromPosition, rightFromPosition + Vector.west);
+    }
+  }
+
+  @override
+  Future<int> calculate(Stream<String> input) async {
+    final grid = await parseGrid(input);
+
+    var maxEnergized = 0;
+
+    for (final (from, to) in findStartingPositions(grid.width, grid.height)) {
+      final visited = <(Vector, Vector)>{};
+      visit(
+        grid,
+        visited,
+        position: to,
+        from: from,
+      );
+
+      final positions = visited.map((e) => e.$2).toSet();
+      maxEnergized = max(maxEnergized, positions.length);
+    }
+
+    return maxEnergized;
+  }
+}
+
 const day = Day(
   PartOne(),
+  PartTwo(),
 );
