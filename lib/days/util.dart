@@ -37,12 +37,13 @@ class Vector {
   });
 
   bool get isHorizontal {
-    if(x != 0 && y != 0) {
+    if (x != 0 && y != 0) {
       throw StateError('Vector is diagonal');
     }
 
     return x != 0;
   }
+
   bool get isVertical => !isHorizontal;
 
   Vector operator +(Vector other) {
@@ -107,5 +108,53 @@ class Vector {
   @override
   String toString() {
     return '($x, $y)';
+  }
+}
+
+class Grid<T> {
+  final List<List<T>> _grid;
+  final int width;
+
+  int get height => _grid.length;
+
+  Grid(this._grid) : width = _grid[0].length;
+
+  Grid.generate({
+    required this.width,
+    required int height,
+    required T Function(Vector position) generator,
+  }) : _grid = List.generate(
+          height,
+          (y) => List.generate(
+            width,
+            (x) => generator(Vector(x: x, y: y)),
+            growable: false,
+          ),
+          growable: false,
+        );
+
+  T operator [](Vector pos) => _grid[pos.y][pos.x];
+
+  void operator []=(Vector pos, T value) => _grid[pos.y][pos.x] = value;
+
+  bool contains(Vector pos) {
+    return pos.x >= 0 && pos.y >= 0 && pos.x < width && pos.y < height;
+  }
+
+  Iterable<List<T>> get rows sync* {
+    for (final row in _grid) {
+      yield row;
+    }
+  }
+
+  Iterable<Iterable<T>> get columns sync* {
+    for (var x = 0; x < width; x += 1) {
+      yield Iterable.generate(height, (y) => _grid[y][x]);
+    }
+  }
+
+  @override
+  String toString() {
+    return rows.map((row) => row.map((e) => e.toString()).join()).join('\n');
   }
 }
