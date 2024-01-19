@@ -83,7 +83,7 @@ jobs:
         if: matrix.runner != 'windows-latest'
       - run: dart compile exe bin/main.dart -o "output/advent-win.exe"
         if: matrix.runner == 'windows-latest'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: output/*
